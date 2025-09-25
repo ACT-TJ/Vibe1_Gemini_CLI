@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MCP Server</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        :root { --sidebar-width: 250px; --sidebar-width-collapsed: 80px; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f2f5; color: #333; margin: 0; }
+        .app-layout { display: flex; }
+        .sidebar { width: var(--sidebar-width); height: 100vh; background-color: #ffffff; box-shadow: 2px 0 5px rgba(0,0,0,0.05); position: fixed; top: 0; left: 0; display: flex; flex-direction: column; transition: width 0.3s ease; z-index: 100; }
+        .sidebar-header { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 25px 0; flex-shrink: 0; }
+        .sidebar-header .logo { width: 30px; height: 30px; flex-shrink: 0; }
+        .sidebar-header h2 { font-size: 1.5em; color: #1a237e; margin: 0; white-space: nowrap; }
+        .sidebar-nav { flex-grow: 1; overflow-y: auto; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 15px; padding: 15px 25px; text-decoration: none; color: #555; font-weight: 600; font-size: 1.1em; transition: all 0.2s ease; border-left: 4px solid transparent; white-space: nowrap; }
+        .sidebar-nav a:hover { background-color: #f0f2f5; color: #1a237e; border-left-color: #3949ab; }
+        .sidebar-nav a.active { background-color: #e3f2fd; color: #1a237e; border-left-color: #1a237e; }
+        .sidebar-nav a svg { width: 24px; height: 24px; stroke-width: 2; flex-shrink: 0; }
+        .sidebar-toggle { background: #f0f2f5; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: absolute; top: 25px; right: -15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 101; }
+        .sidebar-toggle svg { transition: transform 0.3s ease; }
+        .main-content { transition: margin-left 0.3s ease; margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 25px; }
+        body.sidebar-collapsed .sidebar { width: var(--sidebar-width-collapsed); }
+        body.sidebar-collapsed .main-content { margin-left: var(--sidebar-width-collapsed); width: calc(100% - var(--sidebar-width-collapsed)); }
+        body.sidebar-collapsed .sidebar-header h2, body.sidebar-collapsed .sidebar-nav span { display: none; }
+        body.sidebar-collapsed .sidebar-nav a { justify-content: center; }
+        body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .main-header h1 { font-size: 2.5em; font-weight: 600; color: #1a237e; margin: 0; }
+        .card { background-color: #ffffff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); overflow: hidden; margin-bottom: 20px; }
+        .card h2 { font-size: 1.5em; font-weight: 600; margin-top: 0; margin-bottom: 20px; color: #3949ab; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .role-group { margin-bottom: 20px; }
+        .role-group:last-child { margin-bottom: 0; }
+        .role-group > h3 { font-size: 1.2em; font-weight: 600; color: #555; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .team-member { display: flex; align-items: center; margin-bottom: 15px; }
+        .team-member-info { flex-grow: 1; }
+        .team-member-info h4 { margin: 0; font-size: 1.1em; font-weight: 400; }
+        .workload-display { display: flex; align-items: center; }
+        .workload-bar { width: 100px; height: 10px; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; margin-right: 10px; }
+        .workload-level { height: 100%; background-color: #4caf50; border-radius: 5px; }
+        .workload-level.high { background-color: #ff9800; }
+        .timeline-item { margin-bottom: 10px; padding: 10px; border-bottom: 1px solid #eee; }
+        .timeline-item:last-child { border-bottom: none; }
+        .timeline-item h3 { margin: 0; font-size: 1.1em; }
+        .timeline-item p { margin: 0; color: #777; font-size: 0.9em; }
+        .timeline-item.current-phase { background-color: #e3f2fd; border-left: 4px solid #2196f3; margin-left: -14px; padding-left: 10px; }
+        .hotspot-card { background-color: #fff3e0; border-left: 5px solid #ff9800; }
+        .hotspot-card p { font-size: 1.1em; font-weight: 600; color: #e65100; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="sidebar">
+            <button class="sidebar-toggle" title="Toggle Sidebar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <div class="sidebar-header"><a href="/index.html" style="text-decoration:none; display: contents;"><svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#1a237e"/><path d="M30 70 L50 30 L70 70 Z" fill="#ffffff"/></svg><h2>MCP Server</h2></a></div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard.html" class="active" title="Dashboard"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></a>
+                <a href="/tasks.html" title="Tasks"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span>Tasks</span></a>
+                <a href="/admin.html" title="Admin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Admin</span></a>
+            </nav>
+        </nav>
+        <main class="main-content">
+            <div class="main-header"><h1>Team Performance Dashboard</h1></div>
+            <div class="dashboard-grid" id="dashboard-grid-content">
+                <div class="card" id="team-overview-card"><h2>Team Overview</h2></div>
+                <div class="card" id="project-timeline-card"><h2>Project Timeline</h2></div>
+                <div class="card hotspot-card" id="hotspot-card"><h2>Workload Hotspot</h2></div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const toggleButton = document.querySelector('.sidebar-toggle');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed'));
+            });
+        }
+        if (localStorage.getItem('sidebar-collapsed') !== 'false') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/data');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                renderTeamOverview(data.team, data.roles);
+                renderProjectTimeline(data.timeline);
+                renderHotspot(data.team);
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                document.getElementById('dashboard-grid-content').innerHTML = '<p style="color: red;">Error loading data. Please ensure the server is running.</p>';
+            }
+        });
+
+        function renderTeamOverview(team, roles) {
+            const container = document.getElementById('team-overview-card');
+            container.innerHTML = '<h2>Team Overview</h2>'; // Clear previous content
+            const groupedByRole = team.reduce((acc, member) => {
+                acc[member.role] = acc[member.role] || [];
+                acc[member.role].push(member);
+                return acc;
+            }, {});
+
+            roles.forEach(role => {
+                if (!groupedByRole[role] || groupedByRole[role].length === 0) return;
+
+                const roleGroupEl = document.createElement('div');
+                roleGroupEl.className = 'role-group';
+                roleGroupEl.innerHTML = `<h3>${role}s</h3>`;
+
+                groupedByRole[role].forEach(member => {
+                    const memberEl = document.createElement('div');
+                    memberEl.className = 'team-member';
+                    let levelClass = member.workload > 85 ? 'high' : '';
+                    memberEl.innerHTML = `
+                        <div class="team-member-info"><h4>${member.name}</h4></div>
+                        <div class="workload-display">
+                            <div class="workload-bar"><div class="workload-level ${levelClass}" style="width: ${member.workload}%;"></div></div>
+                            <span class="workload-percentage">${member.workload}%</span>
+                        </div>
+                    `;
+                    roleGroupEl.appendChild(memberEl);
+                });
+                container.appendChild(roleGroupEl);
+            });
+        }
+
+        function renderProjectTimeline(timeline) {
+            const container = document.getElementById('project-timeline-card');
+            container.innerHTML = '<h2>Project Timeline</h2>'; // Clear previous content
+            timeline.forEach(phase => {
+                const phaseEl = document.createElement('div');
+                phaseEl.className = 'timeline-item';
+                if (phase.status === 'In Progress') {
+                    phaseEl.classList.add('current-phase');
+                }
+                phaseEl.innerHTML = `
+                    <h3>${phase.name}</h3>
+                    <p>Status: ${phase.status} | ${phase.startDate} - ${phase.endDate}</p>
+                `;
+                container.appendChild(phaseEl);
+            });
+        }
+
+        function renderHotspot(team) {
+            const container = document.getElementById('hotspot-card');
+            container.innerHTML = '<h2>Workload Hotspot</h2>'; // Clear previous content
+            const overloadedMember = team.find(m => m.workload > 85);
+            if (overloadedMember) {
+                container.innerHTML += `<p>&#9888; ${overloadedMember.name}'s workload is currently high. Consider re-allocating tasks.</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

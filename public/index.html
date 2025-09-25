@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Server</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f2f5; color: #333; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .container { text-align: center; background-color: #ffffff; padding: 50px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); max-width: 800px; margin: 20px; }
+        h1 { font-size: 3em; font-weight: 600; color: #1a237e; margin-bottom: 10px; }
+        p { font-size: 1.2em; font-weight: 300; color: #555; margin-bottom: 40px; }
+        .navigation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .nav-card { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; padding: 25px; text-decoration: none; color: #333; transition: all 0.3s ease; }
+        .nav-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); border-color: #3949ab; }
+        .nav-card h2 { font-size: 1.5em; color: #3949ab; margin-top: 0; margin-bottom: 10px; }
+        .nav-card p { font-size: 1em; color: #666; margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to MCP Server</h1>
+        <p>Choose where you want to go.</p>
+        <div class="navigation-grid">
+            <a href="/dashboard.html" class="nav-card">
+                <h2>View Dashboard</h2>
+                <p>See the current project status and team performance.</p>
+            </a>
+            <a href="/tasks.html" class="nav-card">
+                <h2>Task Management</h2>
+                <p>Add, edit, and manage individual tasks.</p>
+            </a>
+            <a href="/admin.html" class="nav-card">
+                <h2>Site Administration</h2>
+                <p>Manage high-level project phases and team members.</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

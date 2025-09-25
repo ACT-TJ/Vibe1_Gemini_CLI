@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management - MCP Server</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        :root { --sidebar-width: 250px; --sidebar-width-collapsed: 80px; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f2f5; color: #333; margin: 0; }
+        .app-layout { display: flex; }
+        .sidebar { width: var(--sidebar-width); height: 100vh; background-color: #ffffff; box-shadow: 2px 0 5px rgba(0,0,0,0.05); position: fixed; top: 0; left: 0; display: flex; flex-direction: column; transition: width 0.3s ease; z-index: 100; }
+        .sidebar-header { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 25px 0; flex-shrink: 0; }
+        .sidebar-header .logo { width: 30px; height: 30px; flex-shrink: 0; }
+        .sidebar-header h2 { font-size: 1.5em; color: #1a237e; margin: 0; white-space: nowrap; }
+        .sidebar-nav { flex-grow: 1; overflow-y: auto; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 15px; padding: 15px 25px; text-decoration: none; color: #555; font-weight: 600; font-size: 1.1em; transition: all 0.2s ease; border-left: 4px solid transparent; white-space: nowrap; }
+        .sidebar-nav a:hover { background-color: #f0f2f5; color: #1a237e; border-left-color: #3949ab; }
+        .sidebar-nav a.active { background-color: #e3f2fd; color: #1a237e; border-left-color: #1a237e; }
+        .sidebar-nav a svg { width: 24px; height: 24px; stroke-width: 2; flex-shrink: 0; }
+        .sidebar-toggle { background: #f0f2f5; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: absolute; top: 25px; right: -15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 101; }
+        .sidebar-toggle svg { transition: transform 0.3s ease; }
+        .main-content { transition: margin-left 0.3s ease; margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 25px; }
+        body.sidebar-collapsed .sidebar { width: var(--sidebar-width-collapsed); }
+        body.sidebar-collapsed .main-content { margin-left: var(--sidebar-width-collapsed); width: calc(100% - var(--sidebar-width-collapsed)); }
+        body.sidebar-collapsed .sidebar-header h2, body.sidebar-collapsed .sidebar-nav span { display: none; }
+        body.sidebar-collapsed .sidebar-nav a { justify-content: center; }
+        body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .main-header h1 { font-size: 2.5em; font-weight: 600; color: #1a237e; margin: 0; }
+        .card { background-color: #ffffff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); margin-bottom: 20px; overflow: hidden; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card h2 { font-size: 1.5em; font-weight: 600; margin: 0; color: #3949ab; }
+        .btn { background-color: #3949ab; color: white; padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s ease; }
+        .btn:hover { background-color: #1a237e; }
+        .grid-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto; gap: 10px; padding: 0 10px 10px 10px; margin-bottom: 10px; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555; }
+        .form-group { margin-bottom: 15px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: center; transition: all 0.3s ease; padding: 5px; border-left: 4px solid transparent; margin-left: -9px; }
+        .form-group.is-deleted { opacity: 0.5; background-color: #ffebee; border-left-color: #f44336 !important; }
+        .form-group.is-deleted input, .form-group.is-deleted select { text-decoration: line-through; pointer-events: none; }
+        .form-group.is-dirty { border-left-color: #ff9800; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; transition: border-color 0.3s ease; }
+        .form-group input.is-dirty-cell, .form-group select.is-dirty-cell { border-color: #ff9800; border-width: 2px; padding: 7px; }
+        .actions { display: flex; gap: 10px; align-items: center; }
+        .save-btn { background-color: #4CAF50; }
+        .save-btn:hover { background-color: #45a049; }
+        .save-btn:disabled { background-color: #9E9E9E; cursor: not-allowed; }
+        .icon-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background-color: #e0e0e0; }
+        .icon-btn svg { width: 22px; height: 22px; stroke: #555; }
+        #notification-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 1000; visibility: hidden; opacity: 0; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        #notification-overlay.show { visibility: visible; opacity: 1; }
+        .notification-box { background-color: #ffffff; color: #333; padding: 40px 60px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); text-align: center; font-size: 1.5em; font-weight: 600; }
+        .notification-box.success { color: #4CAF50; }
+        .notification-box.error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="sidebar">
+            <button class="sidebar-toggle" title="Toggle Sidebar"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <div class="sidebar-header"><a href="/index.html" style="text-decoration:none; display: contents;"><svg class="logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="45" fill="#1a237e"/><path d="M30 70 L50 30 L70 70 Z" fill="#ffffff"/></svg><h2>MCP Server</h2></a></div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard.html" title="Dashboard"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg><span>Dashboard</span></a>
+                <a href="/tasks.html" class="active" title="Tasks"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg><span>Tasks</span></a>
+                <a href="/admin.html" title="Admin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Admin</span></a>
+            </nav>
+        </nav>
+        <main class="main-content">
+            <div class="main-header">
+                <h1>Task Management</h1>
+                <div class="actions">
+                    <button id="add-task" class="btn">+ Add Task</button>
+                    <button id="save-all" class="btn save-btn">Save All Changes</button>
+                    <button id="revert-all" class="icon-btn" title="Revert all unsaved changes"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="grid-header"><div>Task Name</div><div>Assignee</div><div>Phase</div><div>Priority</div><div>Type</div><div>Points</div><div>Actions</div></div>
+                <div id="task-editor"></div>
+            </div>
+        </main>
+    </div>
+    <div id="notification-overlay"><div id="notification-box" class="notification-box"></div></div>
+    <script>
+        const toggleButton = document.querySelector('.sidebar-toggle');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', document.body.classList.contains('sidebar-collapsed'));
+            });
+        }
+        if (localStorage.getItem('sidebar-collapsed') !== 'false') {
+            document.body.classList.add('sidebar-collapsed');
+        }
+
+        let appData = { team: [], timeline: [], tasks: [], roles: [], taskOptions: {} };
+        let isDirty = false;
+        const saveButton = document.getElementById('save-all');
+
+        document.addEventListener('DOMContentLoaded', fetchData);
+
+        function setDirty(dirtyState) {
+            if (isDirty === dirtyState) return;
+            isDirty = dirtyState;
+            updateSaveButtonState();
+        }
+
+        function updateSaveButtonState(savingText) {
+            if (savingText) {
+                saveButton.disabled = true;
+                saveButton.textContent = savingText;
+            } else {
+                saveButton.disabled = !isDirty;
+                saveButton.textContent = 'Save All Changes';
+            }
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/data');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                appData = await response.json();
+                setDirty(false);
+                renderTaskEditor();
+            } catch (error) {
+                console.error('Failed to load data:', error);
+                showNotification('Error loading data from server!', true);
+            }
+        }
+
+        function renderTaskEditor() {
+            const container = document.getElementById('task-editor');
+            container.innerHTML = '';
+            appData.tasks.forEach(task => {
+                const row = document.createElement('div');
+                row.className = 'form-group';
+                if (task.isDeleted) row.classList.add('is-deleted');
+                if (task.isDirty) row.classList.add('is-dirty');
+
+                const createSelect = (options, selectedValue, field) => {
+                    const select = document.createElement('select');
+                    options.forEach(opt => {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.textContent = opt.label;
+                        if (opt.value === selectedValue) option.selected = true;
+                        select.appendChild(option);
+                    });
+                    if (task.dirtyFields && task.dirtyFields[field]) select.classList.add('is-dirty-cell');
+                    select.onchange = () => updateTask(task.id, field, (field === 'assigneeId' || field === 'phaseId' || field === 'points') ? parseInt(select.value) : select.value);
+                    return select;
+                };
+
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.value = task.name;
+                nameInput.placeholder = 'Task Name';
+                if (task.dirtyFields && task.dirtyFields.name) nameInput.classList.add('is-dirty-cell');
+                nameInput.onchange = () => updateTask(task.id, 'name', nameInput.value);
+                row.appendChild(nameInput);
+
+                const assigneeOpts = [{value: '', label: 'Unassigned'}, ...appData.team.map(m => ({ value: m.id, label: m.name }))];
+                row.appendChild(createSelect(assigneeOpts, task.assigneeId, 'assigneeId'));
+
+                const phaseOpts = [{value: '', label: 'No Phase'}, ...appData.timeline.map(p => ({ value: p.id, label: p.name }))];
+                row.appendChild(createSelect(phaseOpts, task.phaseId, 'phaseId'));
+
+                const priorityOpts = appData.taskOptions.priorities.map(p => ({ value: p, label: p }));
+                row.appendChild(createSelect(priorityOpts, task.priority, 'priority'));
+
+                const typeOpts = appData.taskOptions.types.map(t => ({ value: t, label: t }));
+                row.appendChild(createSelect(typeOpts, task.type, 'type'));
+
+                const pointsOpts = appData.taskOptions.points.map(p => ({ value: p, label: p }));
+                row.appendChild(createSelect(pointsOpts, task.points, 'points'));
+
+                const actionButton = document.createElement('button');
+                if (task.isDeleted) {
+                    actionButton.className = 'btn-undo';
+                    actionButton.textContent = 'Undo';
+                    actionButton.onclick = () => toggleDeleteState(task.id, false);
+                } else {
+                    actionButton.className = 'btn-delete';
+                    actionButton.textContent = 'Delete';
+                    actionButton.onclick = () => toggleDeleteState(task.id, true);
+                }
+                row.appendChild(actionButton);
+
+                container.appendChild(row);
+            });
+        }
+
+        function updateTask(id, field, value) {
+            const item = appData.tasks.find(i => i.id === id);
+            if (item) {
+                item[field] = value;
+                item.isDirty = true;
+                item.dirtyFields = item.dirtyFields || {};
+                item.dirtyFields[field] = true;
+                setDirty(true);
+                renderTaskEditor();
+            }
+        }
+
+        function toggleDeleteState(id, isDeleted) {
+            const item = appData.tasks.find(i => i.id === id);
+            if (item) {
+                item.isDeleted = isDeleted;
+                item.isDirty = true;
+                setDirty(true);
+            }
+            renderTaskEditor();
+        }
+
+        document.getElementById('add-task').addEventListener('click', () => {
+            const defaults = appData.taskOptions;
+            const newItem = { id: Date.now(), name: 'New Task', status: 'To Do', assigneeId: null, phaseId: null, priority: defaults.priorities[0], type: defaults.types[0], points: defaults.points[0], isDirty: true, dirtyFields: { name: true, assigneeId: true, phaseId: true, priority: true, type: true, points: true } };
+            appData.tasks.push(newItem);
+            setDirty(true);
+            renderTaskEditor();
+        });
+
+        document.getElementById('save-all').addEventListener('click', async () => {
+            if (!isDirty) return;
+            updateSaveButtonState('Saving...');
+            const dataToSave = { ...appData, tasks: appData.tasks.filter(t => !t.isDeleted) };
+            dataToSave.tasks.forEach(t => { delete t.isDirty; delete t.dirtyFields; });
+            dataToSave.team.forEach(m => { delete m.isDirty; delete m.dirtyFields; });
+            dataToSave.timeline.forEach(p => { delete p.isDirty; delete p.dirtyFields; });
+
+            try {
+                const response = await fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSave) });
+                if (!response.ok) throw new Error('Server responded with an error');
+                updateSaveButtonState('Saved!');
+                showNotification('Saved Successfully!');
+                setDirty(false);
+                setTimeout(() => { fetchData(); }, 1500);
+            } catch (error) {
+                showNotification('Error saving data!', true);
+                updateSaveButtonState();
+            }
+        });
+
+        document.getElementById('revert-all').addEventListener('click', () => {
+            if (isDirty && !confirm('Are you sure you want to discard all unsaved changes?')) return;
+            fetchData();
+            showNotification('Data reloaded from server.');
+        });
+
+        function showNotification(message, isError = false) {
+            const overlay = document.getElementById('notification-overlay');
+            const box = document.getElementById('notification-box');
+            box.textContent = message;
+            box.className = 'notification-box ';
+            box.classList.add(isError ? 'error' : 'success');
+            overlay.classList.add('show');
+            setTimeout(() => { overlay.classList.remove('show'); }, 1500);
+        }
+
+        updateSaveButtonState();
+    </script>
+</body>
+</html>

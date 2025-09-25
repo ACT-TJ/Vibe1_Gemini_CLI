@@ -1,0 +1,137 @@
+{
+  "team": [
+    {
+      "id": 1,
+      "name": "Alice",
+      "role": "Developer",
+      "workload": 50
+    },
+    {
+      "id": 2,
+      "name": "Bob",
+      "role": "Developer",
+      "workload": 50
+    },
+    {
+      "id": 3,
+      "name": "Charlie",
+      "role": "Design",
+      "workload": 0
+    },
+    {
+      "id": 4,
+      "name": "Dana",
+      "role": "QA",
+      "workload": 0
+    }
+  ],
+  "timeline": [
+    {
+      "id": 1,
+      "name": "Phase 1: UI/UX Design",
+      "status": "Completed",
+      "startDate": "2025-09-01",
+      "endDate": "2025-09-15"
+    },
+    {
+      "id": 2,
+      "name": "Phase 2: Backend Development",
+      "status": "In Progress",
+      "startDate": "2025-09-16",
+      "endDate": "2025-10-10"
+    },
+    {
+      "id": 3,
+      "name": "Phase 3: Frontend Development",
+      "status": "In Progress",
+      "startDate": "2025-09-20",
+      "endDate": "2025-10-15"
+    },
+    {
+      "id": 4,
+      "name": "Phase 4: Testing & QA",
+      "status": "Not Started",
+      "startDate": "2025-10-16",
+      "endDate": "2025-10-31"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 101,
+      "name": "Design login page UI",
+      "status": "Completed",
+      "assigneeId": 3,
+      "priority": "High",
+      "type": "Feature",
+      "points": 5,
+      "phaseId": 1
+    },
+    {
+      "id": 102,
+      "name": "Create user authentication API",
+      "status": "In Progress",
+      "assigneeId": 2,
+      "priority": "Critical",
+      "type": "Feature",
+      "points": 8,
+      "phaseId": 2
+    },
+    {
+      "id": 103,
+      "name": "Build database schema",
+      "status": "Completed",
+      "assigneeId": 2,
+      "priority": "High",
+      "type": "Chore",
+      "points": 5,
+      "phaseId": 2
+    },
+    {
+      "id": 104,
+      "name": "Implement login page frontend",
+      "status": "In Progress",
+      "assigneeId": 1,
+      "priority": "High",
+      "type": "Feature",
+      "points": 5,
+      "phaseId": 3
+    },
+    {
+      "id": 105,
+      "name": "Write API tests for authentication",
+      "status": "To Do",
+      "assigneeId": 4,
+      "priority": "Medium",
+      "type": "Chore",
+      "points": 3,
+      "phaseId": 4
+    }
+  ],
+  "roles": [
+    "Developer",
+    "Design",
+    "QA"
+  ],
+  "taskOptions": {
+    "priorities": [
+      "Low",
+      "Medium",
+      "High",
+      "Critical"
+    ],
+    "types": [
+      "Bug",
+      "Feature",
+      "Chore",
+      "Story"
+    ],
+    "points": [
+      1,
+      2,
+      3,
+      5,
+      8,
+      13
+    ]
+  }
+}
